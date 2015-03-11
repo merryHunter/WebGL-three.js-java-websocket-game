@@ -5,10 +5,10 @@ import javax.websocket.EndpointConfig;
 /**
  * Created by Ivan on 05.03.2015.
  */
-public class FigureEncoder implements Encoder.Text<Figure> {
+public class CoordinatesEncoder implements Encoder.Text<Coordinates> {
     @Override
-    public String encode(Figure figure) throws EncodeException {
-        return figure.getJson().toString();
+    public String encode(Coordinates coordinates) throws EncodeException {
+        return coordinates.getJson().toString();
     }
 
     @Override

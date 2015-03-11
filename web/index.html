@@ -1,49 +1,156 @@
-<!--
-  Created by IntelliJ IDEA.
-  User: Ivan
-  Date: 05.03.2015
-  Time: 21:47
-  To change this template use File | Settings | File Templates.
--->
+<!DOCTYPE html>
 
 <html>
 <head>
-    <title></title>
+    <meta charset='utf-8'/>
+
+    <script src="./three.js"></script>
+    -->
 </head>
 <body>
-<h1>Collaborative Whiteboard App</h1>
+<!-- <body style='margin:0px' onload='main()'>
+ <canvas id='main_canvas'style='position: absolute; background-color: black;'></canvas>
+-->
+Moose :)
 
-<table>
-    <tr>
-        <td>
-            <canvas id="myCanvas" width="150" height="150" style="border:1px solid #000000;"></canvas>
-        </td>
-        <td>
-            <form name="inputForm">
-                <table>
-
-                    <tr>
-                        <th>Color</th>
-                        <td><input type="radio" name="color" value="#FF0000" checked="true">Red</td>
-                        <td><input type="radio" name="color" value="#0000FF">Blue</td>
-                        <td><input type="radio" name="color" value="#FF9900">Orange</td>
-                        <td><input type="radio" name="color" value="#33CC33">Green</td>
-                    </tr>
-
-                    <tr>
-                        <th>Shape</th>
-                        <td><input type="radio" name="shape" value="square" checked="true">Square</td>
-                        <td><input type="radio" name="shape" value="circle">Circle</td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-
-                </table>
-            </form>
-        </td>
-    </tr>
-</table>
 <script type="text/javascript" src="websocket.js"></script>
-<script type="text/javascript" src="whiteboard.js"></script>
+
+<script>
+    var container,
+            objects = [],
+            camera,
+            scene,
+            renderer,
+            plane,
+            mouse,
+            raycaster;
+    var cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
+    var cubeMaterial = new THREE.MeshLambertMaterial({color: 0x00ff80, overdraw: 0.5});
+    var hedgehog = new THREE.Mesh(cubeGeometry, cubeMaterial);
+
+    init();
+    render();
+
+
+    /* --=========================SCENE========================== */
+    // create a scene, that will hold all our elements such as objects, cameras and lights.
+    function init() {
+        renderer = new THREE.WebGLRenderer();
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        document.body.appendChild(renderer.domElement);
+
+        camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(500, 800, 1300);
+        camera.lookAt(new THREE.Vector3());
+        scene = new THREE.Scene();
+
+
+        /*======================= Grid=============================*/
+        var size = 500, step = 50;
+        var geometry = new THREE.Geometry();
+        for (var i = -size; i <= size; i += step) {
+            geometry.vertices.push(new THREE.Vector3(-size, 0, i));
+            geometry.vertices.push(new THREE.Vector3(size, 0, i));
+            geometry.vertices.push(new THREE.Vector3(i, 0, -size));
+            geometry.vertices.push(new THREE.Vector3(i, 0, size));
+        }
+        var material = new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2});
+        var line = new THREE.Line(geometry, material, THREE.LinePieces);
+        scene.add(line);
+        /*========================================================*/
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        var geometry = new THREE.PlaneBufferGeometry(1000, 1000);
+        geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+        plane = new THREE.Mesh(geometry);
+        plane.visible = false;
+        scene.add(plane);
+        objects.push(plane);
+        var material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
+
+        /*===================== Lights ============================*/
+        var ambientLight = new THREE.AmbientLight(0x606060);
+        scene.add(ambientLight);
+        var directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.x = Math.random() - 0.5;
+        directionalLight.position.y = Math.random() - 0.5;
+        directionalLight.position.z = Math.random() - 0.5;
+        directionalLight.position.normalize();
+        scene.add(directionalLight);
+        var directionalLight = new THREE.DirectionalLight(0x808080);
+        directionalLight.position.x = Math.random() - 0.5;
+        directionalLight.position.y = Math.random() - 0.5;
+        directionalLight.position.z = Math.random() - 0.5;
+        directionalLight.position.normalize();
+        scene.add(directionalLight);
+
+        renderer.setClearColor(0xf0f0f0);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        document.addEventListener('mousedown', onDocumentMouseDown, false);
+        /*====================================================*/
+
+        initHedgehog();
+
+        window.addEventListener('resize', onWindowResize, false);
+
+
+    }
+
+    function initHedgehog() {
+        hedgehog.position.x = 50;
+        hedgehog.position.y = 50;
+        hedgehog.position.z = 0;
+
+        hedgehog.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+        scene.add(hedgehog);
+        objects.push(hedgehog);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        render();
+    }
+
+    function onDocumentMouseDown(event) {
+        event.preventDefault();
+        mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+        mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(objects);
+        if (intersects.length > 0) {
+            var intersect = intersects[0];
+            /*
+             var voxel = new THREE.Mesh(cubeGeometry, cubeMaterial);
+             voxel.position.copy(intersect.point).add(intersect.face.normal);
+             voxel.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+             scene.add(voxel);
+             objects.push(voxel);
+             */
+            //move hedgehog
+            hedgehog.position.copy(intersect.point).add(intersect.face.normal);
+            hedgehog.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
+            render();
+        }
+
+        var json = JSON.stringify({
+            "pos": {
+                "i": 0,
+                "j": 0
+            }
+        });
+        sendText(json);
+
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+</script>
 </body>
 </html>

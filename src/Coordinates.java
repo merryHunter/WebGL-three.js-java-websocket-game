@@ -1,31 +1,58 @@
+import javax.json.Json;
+import javax.json.JsonObject;
+import java.io.StringWriter;
+
 /**
  * Created by Ivan on 05.03.2015.
  */
 public class Coordinates {
-    private float x;
-    private float y;
+    private JsonObject json;
+
+    public Coordinates(JsonObject json) {
+        this.json = json;
+    }
 
     public Coordinates() {
     }
 
-    public Coordinates(float x, float y) {
-        this.x = x;
-        this.y = y;
+    public JsonObject getJson() {
+        return json;
     }
 
-    public float getX() {
-        return x;
+    public void setJson(JsonObject json) {
+        this.json = json;
     }
 
-    public void setX(float x) {
-        this.x = x;
+
+    private int i;
+    private int j;
+
+
+    public Coordinates(int i, int j) {
+        this.i = i;
+        this.j = j;
     }
 
-    public float getY() {
-        return y;
+    public float getI() {
+        return i;
     }
 
-    public void setY(float y) {
-        this.y = y;
+    public void setI(int i) {
+        this.i = i;
+    }
+
+    public float getJ() {
+        return j;
+    }
+
+    public void setJ(int j) {
+        this.j = j;
+    }
+
+    @Override
+    public String toString() {
+        StringWriter writer = new StringWriter();
+        Json.createWriter(writer).write(json);
+        return writer.toString();
     }
 }

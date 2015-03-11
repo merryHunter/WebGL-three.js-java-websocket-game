@@ -9,11 +9,11 @@ import java.io.StringReader;
 /**
  * Created by Ivan on 05.03.2015.
  */
-public class FigureDecoder implements Decoder.Text<Figure> {
+public class CoordinatesDecoder implements Decoder.Text<Coordinates> {
     @Override
-    public Figure decode(String s) throws DecodeException {
+    public Coordinates decode(String s) throws DecodeException {
         JsonObject jsonObject = Json.createReader(new StringReader(s)).readObject();
-        return new Figure(jsonObject);
+        return new Coordinates(jsonObject);
     }
 
     @Override
