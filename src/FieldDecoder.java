@@ -1,3 +1,5 @@
+import jdk.nashorn.api.scripting.JSObject;
+
 import javax.json.Json;
 import javax.json.JsonException;
 import javax.json.JsonObject;
@@ -7,13 +9,13 @@ import javax.websocket.EndpointConfig;
 import java.io.StringReader;
 
 /**
- * Created by Ivan on 05.03.2015.
+ * Created by Ivan on 13.03.2015.
  */
-public class CoordinatesDecoder implements Decoder.Text<Coordinates> {
+public class FieldDecoder implements Decoder.Text<Field> {
     @Override
-    public Coordinates decode(String s) throws DecodeException {
+    public Field decode(String s) throws DecodeException {
         JsonObject jsonObject = Json.createReader(new StringReader(s)).readObject();
-        return new Coordinates(jsonObject);
+        return new Field(jsonObject);
     }
 
     @Override

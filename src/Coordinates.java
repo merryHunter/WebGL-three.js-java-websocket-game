@@ -33,7 +33,7 @@ public class Coordinates {
         this.j = j;
     }
 
-    public float getI() {
+    public int getI() {
         return i;
     }
 
@@ -41,7 +41,7 @@ public class Coordinates {
         this.i = i;
     }
 
-    public float getJ() {
+    public int getJ() {
         return j;
     }
 

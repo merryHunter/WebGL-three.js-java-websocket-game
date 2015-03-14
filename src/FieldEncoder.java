@@ -3,12 +3,13 @@ import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
 
 /**
- * Created by Ivan on 05.03.2015.
+ * Created by Ivan on 13.03.2015.
  */
-public class CoordinatesEncoder implements Encoder.Text<Coordinates> {
+public class FieldEncoder implements Encoder.Text<Field> {
+
     @Override
-    public String encode(Coordinates coordinates) throws EncodeException {
-        return coordinates.getJson().toString();
+    public String encode(Field field) throws EncodeException {
+        return field.getJson().toString();
     }
 
     @Override
