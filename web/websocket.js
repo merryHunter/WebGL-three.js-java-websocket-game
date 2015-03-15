@@ -285,9 +285,9 @@ function onDocumentMouseDown(event) {
         }
     });
     sendText(json);
-    while (!updatedModel) {
-        setTimeout(render, 100);
-    }
+    setTimeout(render, 100);
+
+
 }
 
 function render() {
