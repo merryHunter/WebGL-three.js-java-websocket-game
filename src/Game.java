@@ -2,6 +2,9 @@
  * Created by Ivan on 10.03.2015.
  */
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 /**
@@ -20,6 +23,7 @@ public class Game {
     private int[][] field;
 
     private int score = 0;
+    PrintWriter writer;
 
     /**
      * Number of apples currently placed on the field.
@@ -67,22 +71,30 @@ public class Game {
     }
 
     public int makeMove(int i, int j) {
-        //hedgehog frees place
-        field[currentRow][currentColumn] = EMPTY;
-        //hedgehog makes move
-        currentRow = i;
-        currentColumn = j;
+        try {
+            writer = new PrintWriter("server-log.txt", "UTF-8");
 
-        currentPosition = i * 10 + j;
+            //hedgehog frees place
+            field[currentRow][currentColumn] = EMPTY;
+            //hedgehog makes move
+            currentRow = i;
+            currentColumn = j;
 
-        //if apple placed here
-        if (field[i][j] == APPLE) {
-            score += 10;
-            --currentApples;
+            currentPosition = i * 10 + j;
+            writer.println("field[i][j]  " + i + " " + j);
+            //if apple placed here
+            if (field[i][j] == APPLE) {
+                writer.println("Apple eaten at " + i + " " + j);
+                score += 10;
+                --currentApples;
+            }
+
+            field[i][j] = HEDGEHOG;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-
-        field[i][j] = HEDGEHOG;
-
         return score;
     }
 
