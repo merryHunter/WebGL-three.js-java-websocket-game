@@ -51,6 +51,10 @@ public class Game {
         for (int i = 0; i < N; ++i) {
             int j = rand.nextInt(N);
             //apple here
+            if (field[i][j] == HEDGEHOG) {
+                --i;
+                continue;
+            }
             field[i][j] = APPLE;
         }
 

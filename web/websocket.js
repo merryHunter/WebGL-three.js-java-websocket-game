@@ -17,12 +17,14 @@ var EMPTY = 0;
 var APPLE = 1;
 var HEDGEHOG = 2;
 var PLANE_SIZE = 1000;
+var MODELS_HEIGHT = 25;
 var currentI = 0, currentJ = 0;
 var updatedModel = false;
+var loader = new THREE.STLLoader();
+
 function Apple(mesh) {
     this.mesh = mesh;
     this.eaten = false;
-
 }
 
 
@@ -47,7 +49,9 @@ function onMessage(evt) {
     console.log("received onMessage websocket: " + evt.data);
     parseJSONToObject(evt);
     if (jsonObjectPlayerWin !== null) {
+        render();
         gameEnd();
+        websocket.close();
     }
 
 }
@@ -107,7 +111,8 @@ start();
 /* --=========================SCENE========================== */
 // create a scene, that will hold all our elements such as objects, cameras and lights.
 function start() {
-    setTimeout(init, 5000);
+    setTimeout(init, 3000);
+    setTimeout(render, 4000);
 }
 function init() {
 
@@ -148,7 +153,6 @@ function init() {
 
 function initPlane() {
     /*========================= TEXTURE =========================*/
-
     var planeTexture = new THREE.ImageUtils.loadTexture('images/grass.jpg');
     planeTexture.wrapS = planeTexture.wrapT = THREE.RepeatWrapping;
     planeTexture.repeat.set(8, 8);
@@ -156,39 +160,26 @@ function initPlane() {
     var planeGeometry = new THREE.PlaneBufferGeometry(PLANE_SIZE, PLANE_SIZE);
     planeGeometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
     plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    //plane.position.y = -0.5;
-    //plane.rotation.x = Math.PI / 2;
-    //!!!
-    //plane.position.set(-500,0,-500);
+
     scene.add(plane);
     objects.push(plane);
     /*======================== SKYBOX/FOG ========================*/
     var skyBoxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
     var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
     var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
+
     scene.add(skyBox);
     scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
-    /*======================= MODELS ==========================*/
-    loadModels();
-
 }
 
-function loadModels() {
+function loadHedgehog() {
     var loader = new THREE.STLLoader();
-
     //???
     var hedgehogTexture = new THREE.ImageUtils.loadTexture('textures/hedgehogTexture.jpg');
 
-    //var material = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
-    var material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, side: THREE.BackSide});
+    var material = new THREE.MeshPhongMaterial({color: 0xFF0066, shininess: 30, specular: 0x111111});
     loader.load('models/test1.stl', function (geometry) {
-        //if (geometry.hasColors) {
-        //  meshMaterial = new THREE.MeshPhongMaterial({ opacity: geometry.alpha, vertexColors: THREE.VertexColors });
-        //}
-        var meshMaterial = new THREE.MeshPhongMaterial({color: 0x7a030b, vertexColors: THREE.VertexColors});
-        hedgehog = new THREE.Mesh(geometry, meshMaterial);
-        hedgehog.position.set(5.5, 5.2, 2);
-        //mesh.rotation.set( - Math.PI / 2, Math.PI / 2, 0 );
+        hedgehog = new THREE.Mesh(geometry, material);
         hedgehog.scale.set(10, 10, 10);
         hedgehog.castShadow = true;
         hedgehog.receiveShadow = true;
@@ -197,9 +188,37 @@ function loadModels() {
     });
 }
 
+function loadApple() {
+
+    //???
+    //var appleTexture = new THREE.ImageUtils.loadTexture('textures/appleTexture.jpg');
+    //var material = new THREE.MeshBasicMaterial({color: 0xAAAAAA, 00AAFF side: THREE.BackSide});
+    var material = new THREE.MeshPhongMaterial({color: 0xFF0000, shininess: 30, specular: 0x111111});
+    loader.load('models/apple.stl', function (geometry) {
+        var meshMaterial = new THREE.MeshPhongMaterial({
+            color: 0x690708,
+            ambient: 0x690708, // should generally match color
+            specular: 0x050505,
+            shininess: 100,
+            vertexColors: THREE.VertexColors
+        });
+        var meshApple = new THREE.Mesh(geometry, material);
+        meshApple.scale.set(30, 30, 30);
+        meshApple.castShadow = true;
+        meshApple.receiveShadow = true;
+
+        var apple = new Apple(meshApple);
+        apples.push(apple);
+        objects.push(meshApple);
+        scene.add(meshApple);
+    });
+}
+
 function initLight() {
-    var ambientLight = new THREE.AmbientLight(0x606060);
+    var ambientLight = new THREE.AmbientLight(0x404040); // soft white light scene.add( light );
+    // var ambientLight = new THREE.AmbientLight(0x606060);
     scene.add(ambientLight);
+
     var directionalLight = new THREE.DirectionalLight(0xffffff);
     directionalLight.position.x = Math.random() - 0.5;
     directionalLight.position.y = Math.random() - 0.5;
@@ -212,32 +231,26 @@ function initLight() {
     directionalLight.position.z = Math.random() - 0.5;
     directionalLight.position.normalize();
     scene.add(directionalLight);
+
+    //var light = new THREE.PointLight( 0xff0000, 1, 100 ); light.position.set( 150, 150, 500 ); scene.add( light );
 }
 
 function initModels() {
     if (field == null)
         return;
-    var size = PLANE_SIZE / (2 * N);
+
     for (var i = 0; i < N; ++i) {
         for (var j = 0; j < N; ++j) {
             if (field[i][j] == APPLE) {
-                var cubeGeometry = new THREE.BoxGeometry(size, size, size);
-                var cubeMaterial = new THREE.MeshLambertMaterial({color: 0x00ff80, overdraw: 0.5});
-                var meshApple = new THREE.Mesh(cubeGeometry, cubeMaterial);
-                var apple = new Apple(meshApple);
-                apples.push(apple);
-                objects.push(meshApple);
-                scene.add(meshApple);
+                loadApple();
+            }
+            else if (field[i][j] == HEDGEHOG) {
+                loadHedgehog();
             }
         }
     }
 
-    hedgehog.position.x = 50;
-    hedgehog.position.y = 25;
-    hedgehog.position.z = 0;
-
-    hedgehog.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
-    getCurrentPosIJ();
+    render();
 }
 
 function onWindowResize() {
@@ -249,45 +262,80 @@ function onWindowResize() {
 
 function onDocumentMouseDown(event) {
     event.preventDefault();
+
     mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
     mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
     var intersects = raycaster.intersectObjects(objects);
     if (intersects.length > 0) {
+        //-------send request to update model----------
         var intersect = intersects[0];
-        //move hedgehog
-        hedgehog.position.copy(intersect.point).add(intersect.face.normal);
-        hedgehog.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
-        getCurrentPosIJ();
-        /////
-        for (var obj in objects) {
-            if (objects[obj] == intersect.object) {
-                for (var j in apples) {
-                    if (apples[j].mesh == objects[obj]) {
-                        apples[j].eaten = true;
-                    }
-                }
+        var newPosition = new THREE.Vector3().copy(intersect.point.add(intersect.face.normal));
+        var oldPosition = new THREE.Vector3().copy(hedgehog.position);
+        setCurrentPosIJ(newPosition);
+        updatedModel = false;
+        sendText(JSON.stringify({
+            "pos": {
+                "i": currentI,
+                "j": currentJ
             }
-        }
-        /////
-        /**
-         * TODO:
-         *rotate hedgehog orientation in forward to mouse click
-         */
-        //hedgehog.rotateOnAxis(new THREE.Vector3(0,1,0), 30);
+        }));
+        //------------------------------------------
+        rotateHedgehogOrientation(oldPosition, newPosition);
 
+        function moveHedgehog() {
+            var distance = getDistance(oldPosition, newPosition);
+            var delta = distance / (PLANE_SIZE);
+            var lambda = delta;
+            if (delta < 0.1) {
+                delta *= N;
+            }
+            var frequency = 1 / lambda;
+            //if(frequency > 10)
+            //    frequency  /= 10;
+            var i = 0;
+
+            function frame() {
+                ++i;
+                lambda += delta;  // update parameters
+
+                var tempPos = getTempPosition(oldPosition, newPosition, lambda);
+                hedgehog.position.set(tempPos.x, tempPos.y, tempPos.z);
+                renderer.render(scene, camera);
+                // // check finish condition
+                if (lambda > 10) {
+                    hedgehog.position.set(newPosition.x, newPosition.y, newPosition.z);
+                    render();
+                    clearInterval(id);
+                }
+
+            }
+
+            var id = setInterval(frame, frequency);
+        }
+
+        moveHedgehog();
+        //======================================
+        setEatenApples(intersect);
+
+        //hedgehog.position.copy(intersect.point).add(intersect.face.normal);
+        //hedgehog.position.divideScalar(50).floor().multiplyScalar(50).addScalar(25);
     }
-    updatedModel = false;
-    var json = JSON.stringify({
-        "pos": {
-            "i": currentI,
-            "j": currentJ
-        }
-    });
-    sendText(json);
-    setTimeout(render, 100);
+
+    //setTimeout(render, 100);
+}
 
 
+/**
+ * Rotate hedgehog orientation in forward to mouse click.
+ * TODO: incorrect behaviour!
+ * @param oldPos
+ * @param newPos
+ */
+function rotateHedgehogOrientation(oldPos, newPos) {
+    var angle = oldPos.angleTo(newPos) * 180 / Math.PI;
+    var cos = cosinusBetweenVectors(oldPos, newPos);
+    hedgehog.rotateOnAxis(new THREE.Vector3(0, 1, 0), angle);
 }
 
 function render() {
@@ -301,17 +349,20 @@ function onDocumentWheel(event) {
     var delta = event.wheelDelta;
 
     if (delta > 0) {
-        camera.position.z -= 100;
+        camera.position.z -= 10;
+        camera.position.y -= 10;
     }
     else {
-        camera.position.z += 100;
+        camera.position.z += 10;
+        camera.position.y += 10;
+
     }
     camera.updateProjectionMatrix();
     render();
 }
 
 function updateView() {
-    if (jsonObjectField == null || apples == null)
+    if (jsonObjectField == null || apples.length == 0)
         return;
     checkEatenApples();
     if (!updatedModel)
@@ -324,20 +375,14 @@ function updateView() {
         for (var j = 0; j < N; ++j) {
             if (field[i][j] == APPLE) {
                 apples[p].eaten = false;
-                apples[p].mesh.position.set(translateX, 25, translateZ);
+                apples[p].mesh.position.set(translateX, MODELS_HEIGHT, translateZ);
                 ++p;
             }
+            else if (field[i][j] == HEDGEHOG) {
+                hedgehog.position.set(translateX, MODELS_HEIGHT / 2, translateZ);
+                setCurrentPosIJ(hedgehog.position);
+            }
             translateX += step;
-            /*
-             {
-             var cubeGeometry = new THREE.BoxGeometry(50, 50, 50);
-             var cubeMaterial = new THREE.MeshLambertMaterial({color: 0x00ff80, overdraw: 0.5});
-             var mesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
-             mesh.position.x = -20 * (k + 10 % 10);
-             scene.add(mesh);
-             objects.push(mesh);
-             }
-             */
         }
         translateX = -PLANE_SIZE / 2 + step / 2;
         translateZ += step;
@@ -345,6 +390,11 @@ function updateView() {
 
 }
 
+/**
+ * Check @eaten property and if an apple
+ * has false value, then remove this apple
+ * from object, scene and apples arrays.
+ */
 function checkEatenApples() {
     var j = 0;
     for (var a in apples) {
@@ -374,14 +424,64 @@ function checkEatenApples() {
 
 }
 
+/**
+ * Check if user clicked onto the apple
+ * and set the apple's property @eaten.
+ * @param intersect object selected by mouse clicking
+ */
+function setEatenApples(intersect) {
+    for (var obj in objects) {
+        if (objects[obj] == intersect.object) {
+            for (var j in apples) {
+                if (apples[j].mesh == objects[obj]) {
+                    apples[j].eaten = true;
+                }
+            }
+        }
+    }
+}
 
 function gameEnd() {
     alert("You win! :)")
 }
 
-function getCurrentPosIJ() {
-    var x = hedgehog.position.x + PLANE_SIZE / 2;
-    var z = hedgehog.position.z + PLANE_SIZE / 2;
+/**
+ * Set current position of hedgehog.
+ * @param position is 3d coordinates.
+ */
+function setCurrentPosIJ(position) {
+    var x = position.x + PLANE_SIZE / 2;
+    var z = position.z + PLANE_SIZE / 2;
     currentJ = Math.floor(x / 100);
     currentI = Math.floor(z / 100);
+}
+
+function getDistance(start, end) {
+    return Math.sqrt(
+        (end.x - start.x) *
+        (end.x - start.x) + (end.y - start.y) *
+        (end.y - start.y) + (end.z - start.z) * (end.z - start.z)
+    );
+}
+
+function getTempPosition(start, end, lambda) {
+    var tempPosition = new THREE.Vector3();
+
+    tempPosition.x = (start.x + lambda * end.x) / (1 + lambda);
+    tempPosition.y = (start.y + lambda * end.y) / (1 + lambda);
+    tempPosition.z = (start.z + lambda * end.z) / (1 + lambda);
+
+    return tempPosition;
+}
+
+function cosinusBetweenVectors(f, s) {
+    return Math.cos(
+        (f.x * s.x + f.y * s.y + f.z * s.z) / (normVector(f) * normVector(s))
+    );
+}
+
+function normVector(v) {
+    return Math.sqrt(
+        v.x * v.x + v.y * v.y + v.z * v.z
+    );
 }
