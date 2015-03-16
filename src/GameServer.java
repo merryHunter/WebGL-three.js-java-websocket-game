@@ -64,7 +64,10 @@ public class GameServer {
 
         //send if game ended message
         if (game.isGameEnd()) {
-            session.getBasicRemote().sendObject("Win!");
+            JsonObject win = Json.createObjectBuilder()
+                    .add("winner", game.getScore())
+                    .build();
+            session.getBasicRemote().sendObject(win);
         }
     }
 

@@ -94,6 +94,8 @@ public class Game {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
+        } finally {
+            writer.close();
         }
         return score;
     }

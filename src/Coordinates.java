@@ -1,5 +1,8 @@
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
+import javax.json.stream.JsonParser;
+import java.io.StringReader;
 import java.io.StringWriter;
 
 /**
@@ -10,6 +13,34 @@ public class Coordinates {
 
     public Coordinates(JsonObject json) {
         this.json = json;
+
+        JsonParser parser = Json.createParser(new StringReader(this.toString()));
+        int c[] = new int[2];
+        int i = 0;
+        while (parser.hasNext()) {
+            JsonParser.Event event = parser.next();
+            switch (event) {
+                case START_ARRAY:
+                case END_ARRAY:
+                case START_OBJECT:
+                case END_OBJECT:
+                case VALUE_FALSE:
+                case VALUE_NULL:
+                case VALUE_TRUE:
+                    System.out.println(event.toString());
+                    break;
+                case KEY_NAME:
+                    System.out.print(event.toString() + " " +
+                            parser.getString() + " - ");
+                    break;
+                case VALUE_NUMBER:
+                    c[i] = Integer.parseInt(parser.getString());
+                    ++i;
+                    break;
+            }
+        }
+        this.i = c[0];
+        this.j = c[1];
     }
 
     public Coordinates() {

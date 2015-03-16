@@ -63,7 +63,7 @@ function parseJSONToObject(evt) {
         case "score":
             jsonObjectScore = jsonObject;
             break;
-        case "Win!":
+        case "winner":
             jsonObjectPlayerWin = jsonObject;
             break;
         case "field":
@@ -83,7 +83,7 @@ function parseJSONToObject(evt) {
 }
 
 function onError(evt) {
-    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    //writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
 }
 
 /*=============================================================*/
@@ -376,7 +376,7 @@ function checkEatenApples() {
 
 
 function gameEnd() {
-
+    alert("You win! :)")
 }
 
 function getCurrentPosIJ() {
